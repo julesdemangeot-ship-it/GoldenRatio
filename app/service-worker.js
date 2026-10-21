@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "goldenratio-app-v1";
+const CACHE_NAME = "goldenratio-app-v2";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -13,80 +13,22 @@ const APP_FILES = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_FILES))
-mkdir -p app/icons
+  );
+  self.skipWaiting();
+});
 
-cat > app/index.html <<'EOF'
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f7f4">
-  <meta name="description" content="Une application simple pour découvrir et calculer le nombre d’or.">
-  <title>GoldenRatio — Le nombre d’or</title>
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css">
-</head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="./" aria-label="GoldenRatio, accueil">
-      <span class="brand-mark">φ</span>
-      <span>GoldenRatio</span>
-    </a>
-    <span class="version">VERSION 0.2 · APERÇU</span>
-  </header>
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
 
-  <main>
-    <section class="hero">
-      <p class="eyebrow">MATHÉMATIQUES · GÉOMÉTRIE</p>
-      <h1>Le nombre d’or<span class="accent">.</span></h1>
-      <p class="intro">
-        Une constante fascinante, présente dans les mathématiques,
-        les formes et les proportions.
-      </p>
-
-      <article class="value-card">
-        <div class="value-label">NOMBRE D’OR</div>
-        <div class="phi">φ</div>
-        <output id="result" class="number" aria-live="polite">
-          1.618033988749895
-        </output>
-        <button id="copy-button" class="copy-button" type="button">
-          <span aria-hidden="true">▢</span>
-          <span id="copy-label">Copier la valeur</span>
-        </button>
-        <p id="copy-status" class="status" aria-live="polite"></p>
-      </article>
-    </section>
-
-    <section class="details" aria-labelledby="understand-title">
-      <h2 id="understand-title">Comprendre φ</h2>
-      <p>Le nombre d’or est défini par cette expression exacte :</p>
-      <div class="formula" aria-label="phi égale un plus racine carrée de cinq, le tout divisé par deux">
-        <span>φ = </span>
-        <span class="fraction">
-          <span>1 + √5</span>
-          <span>2</span>
-        </span>
-      </div>
-
-      <div class="property">
-        <div class="property-symbol">φ²</div>
-        <div>
-          <h3>Une propriété remarquable</h3>
-          <p>Le carré du nombre d’or est égal au nombre d’or plus un.</p>
-          <code>φ² = φ + 1</code>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <span>GoldenRatio</span>
-    <span>Simplement, les mathématiques.</span>
-  </footer>
-
-  <script src="./app.js" defer></script>
-</body>
-</html>
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  event.respondWith(
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
+  );
+});
