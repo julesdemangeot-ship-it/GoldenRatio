@@ -1,4 +1,4 @@
-# Psge1
+# GoldenRatio
 
 ## Nombre d'or (Golden Ratio)
 
