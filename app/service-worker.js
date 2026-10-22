@@ -1,13 +1,18 @@
 "use strict";
 
-const CACHE_NAME = "goldenratio-app-v2";
+// Incrémenter ce numéro à chaque publication force le nettoyage des anciens caches.
+const CACHE_NAME = "goldenratio-app-v3";
 const APP_FILES = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
   "./manifest.webmanifest",
-  "./icons/icon.svg"
+  "./icons/icon.svg",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/icon-maskable-512.png",
+  "./icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -26,9 +31,26 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Réseau d'abord : la version en ligne est toujours servie quand elle est
+// joignable, et le cache est mis à jour au passage. Hors connexion, on
+// retombe sur la copie en cache.
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const request = event.request;
+  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(() =>
+        caches.match(request, { ignoreSearch: true }).then(
+          (cached) => cached || (request.mode === "navigate" ? caches.match("./index.html") : Response.error())
+        )
+      )
   );
 });

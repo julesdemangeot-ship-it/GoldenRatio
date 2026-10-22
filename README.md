@@ -56,4 +56,10 @@ Puis ouvrir http://127.0.0.1:8000
 
 ## Mise en ligne
 
-L'application est publiée automatiquement sur GitHub Pages à chaque modification de la branche `main` (voir `.github/workflows/static.yml`).
+L'application est publiée automatiquement sur GitHub Pages à chaque modification de la branche `main`, une fois les tests passés (voir `.github/workflows/static.yml`). Les pull requests lancent seulement les tests.
+
+Quand tu modifies un fichier de `app/`, pense à incrémenter `CACHE_NAME` dans `app/service-worker.js` (et le numéro de version affiché dans `index.html`) : c'est ce qui fait le ménage dans les anciennes versions installées.
+
+## Licence
+
+[MIT](LICENSE)

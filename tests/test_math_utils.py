@@ -66,3 +66,4 @@ if __name__ == "__main__":
         except AssertionError as e:
             print(f"FAIL  {t.__name__}: {e}")
     print(f"\n{passed}/{len(tests)} tests passed.")
+    sys.exit(0 if passed == len(tests) else 1)
