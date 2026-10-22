@@ -1,29 +1,48 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+# Vérifie le code puis publie l'application (dossier app/) sur GitHub Pages
+name: Tests et déploiement sur Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # À chaque push sur main : tests puis déploiement
   push:
     branches: ["main"]
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Sur les pull requests : tests uniquement
+  pull_request:
+
+  # Lancement manuel depuis l'onglet Actions
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Un seul déploiement à la fois ; on n'annule pas celui en cours.
 concurrency:
-  group: "pages"
+  group: "pages-${{ github.ref }}"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Tests Python
+        run: python3 tests/test_math_utils.py
+      - name: Vérification du JavaScript et du manifest
+        run: |
+          node --check app/app.js
+          node --check app/service-worker.js
+          python3 -m json.tool app/manifest.webmanifest > /dev/null
+
   deploy:
+    needs: test
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -36,7 +55,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Seul le dossier app/ est publié
           path: 'app'
       - name: Deploy to GitHub Pages
         id: deployment

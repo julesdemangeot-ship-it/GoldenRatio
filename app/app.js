@@ -8,7 +8,11 @@ const copyStatus = document.querySelector("#copy-status");
 
 result.textContent = phi.toPrecision(16);
 
+let resetTimer;
+
 copyButton.addEventListener("click", async () => {
+  window.clearTimeout(resetTimer);
+
   try {
     await navigator.clipboard.writeText(result.textContent);
     copyLabel.textContent = "Valeur copiée";
@@ -18,7 +22,7 @@ copyButton.addEventListener("click", async () => {
       "Copie automatique indisponible. Sélectionne la valeur pour la copier.";
   }
 
-  window.setTimeout(() => {
+  resetTimer = window.setTimeout(() => {
     copyLabel.textContent = "Copier la valeur";
     copyStatus.textContent = "";
   }, 2500);
